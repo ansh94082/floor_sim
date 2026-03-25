@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Leaderboard | TradeTerminal</title>
+    <style>
+        /* === ZERO-DEPENDENCY OFFLINE STYLES === */
+        :root {
+            --bg-main: #020617;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --bg-card-gold: #0f172a;
+            --text-white: #ffffff;
+            --text-emerald: #10b981;
+            --text-emerald-light: #34d399;
+            --text-slate-300: #cbd5e1;
+            --text-slate-400: #94a3b8;
+            --text-slate-500: #64748b;
+            --text-slate-600: #475569;
+            --border-slate-800: #1e293b;
+            --gold: #fbbf24;
+            --silver: #94a3b8;
+            --bronze: #cd7f32;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            /* Uses native system fonts so it loads instantly offline */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-white);
+            overflow-y: auto; /* CHANGED: Allows scrolling */
+            padding: 2.5rem 3rem;
+        }
+
+        /* CHANGED: Custom Scrollbar to keep the projector looking clean */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; border: 2px solid var(--bg-main); }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-slate-800);
+        }
+
+        .title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--text-emerald);
+            letter-spacing: -0.05em;
+            /* Fallback to Impact for a bold, 'branding' look offline */
+            font-family: 'Impact', system-ui, sans-serif; 
+        }
+
+        .subtitle {
+            color: var(--text-slate-500);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .subtitle span { color: var(--text-emerald-light); }
+
+        .clock {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--text-slate-300);
+            font-family: monospace; /* Gives a nice digital terminal look */
+            letter-spacing: 0.1em;
+        }
+
+        /* Leaderboard Grid & Cards */
+        .leaderboard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .rank-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-left { display: flex; align-items: center; gap: 2rem; }
+        
+        .medal-col { 
+            width: 4rem; 
+            display: flex; 
+            justify-content: center; 
+            font-size: 2.5rem; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .team-info h3 { 
+            font-size: 2rem; 
+            font-weight: bold; 
+            letter-spacing: -0.025em; 
+            margin-bottom: 0.25rem;
+        }
+
+        .team-info p { 
+            color: var(--text-slate-400); 
+            font-size: 1rem; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+        }
+
+        .card-right { text-align: right; }
+
+        .nw-label { 
+            font-size: 0.85rem; 
+            font-weight: 900; 
+            color: var(--text-emerald); 
+            text-transform: uppercase; 
+            letter-spacing: 0.15em; 
+            margin-bottom: 0.25rem; 
+        }
+
+        .nw-value { 
+            font-size: 2.5rem; 
+            font-weight: 900; 
+            font-family: 'Impact', system-ui, sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        /* Podium Glow Effects */
+        .gold-glow {
+            background: var(--bg-card-gold);
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.25);
+            transform: scale(1.02);
+            margin: 0.5rem 0;
+            padding: 2rem; /* Make 1st place slightly taller */
+        }
+        .gold-glow .nw-value { font-size: 3.5rem; color: var(--gold); }
+        .gold-glow h3 { font-size: 2.5rem; }
+
+        .silver-glow { border: 2px solid var(--silver); box-shadow: 0 0 25px rgba(148, 163, 184, 0.15); }
+        .bronze-glow { border: 2px solid var(--bronze); box-shadow: 0 0 25px rgba(205, 127, 50, 0.15); }
+        
+        .normal-rank { opacity: 0.8; border: 1px solid transparent; }
+        .rank-number { color: var(--text-slate-600); font-size: 1.75rem; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div>
+            <h1 class="title">LIVE LEADERBOARD</h1>
+            <p class="subtitle">Market Status: <span>Trading Open</span></p>
+        </div>
+        <div class="text-right">
+            <div id="clock" class="clock">00:00:00</div>
+        </div>
+    </header>
+
+    <div id="leaderboardGrid" class="leaderboard-grid">
+        </div>
+
+    <script>
+        async function updateLeaderboard() {
+            try {
+                const res = await fetch('/api/leaderboard');
+                const data = await res.json();
+                
+                const container = document.getElementById('leaderboardGrid');
+                container.innerHTML = data.map((team, index) => {
+                    let glowClass = "normal-rank";
+                    let medal = `<span class="rank-number">#${index + 1}</span>`;
+                    
+                    if (index === 0) {
+                        glowClass = "gold-glow";
+                        medal = `👑`; // Native crown emoji
+                    } else if (index === 1) {
+                        glowClass = "silver-glow";
+                        medal = `🥈`; // Native silver medal emoji
+                    } else if (index === 2) {
+                        glowClass = "bronze-glow";
+                        medal = `🥉`; // Native bronze medal emoji
+                    }
+
+                    return `
+                        <div class="rank-card ${glowClass}">
+                            <div class="card-left">
+                                <div class="medal-col">${medal}</div>
+                                <div class="team-info">
+                                    <h3>${team.name}</h3>
+                                    <p>Cash: ₹${team.cash.toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div class="card-right">
+                                <div class="nw-label">Total Net Worth</div>
+                                <div class="nw-value">₹${team.netWorth.toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) { 
+                console.error("Update failed. Make sure the server is running."); 
+            }
+        }
+
+        // Clock Update
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-US', { hour12: false });
+        }, 1000);
+
+        // Leaderboard Update
+        updateLeaderboard();
+        setInterval(updateLeaderboard, 10000); // Refreshes every 10 seconds
+    </script>
+</body>
+</html>

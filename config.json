@@ -1,0 +1,22 @@
+{
+  "STOCKS": [
+    {"ticker": "RELIANCE", "price": 500},
+    {"ticker": "TATA", "price": 1200},
+    {"ticker": "ZOMATO", "price": 150},
+    {"ticker": "ZOMerATO", "price": 150},
+    {"ticker": "ZOMATetwO", "price": 150},
+    {"ticker": "ZOMATweO", "price": 150},
+    {"ticker": "wsZOMATO", "price": 150},
+    {"ticker": "wqwMATO", "price": 150},
+    {"ticker": "artwwMATO", "price": 150},
+    {"ticker": "ppwMATO", "price": 150},
+    {"ticker": "llwMATO", "price": 150},
+    {"ticker": "lltwMATO", "price": 150},
+    {"ticker": "lelwMATO", "price": 150},
+    {"ticker": "wertywMATO", "price": 150},
+    {"ticker": "ergwMATO", "price": 150},
+    {"ticker": "INFOSYS", "price": 1600}
+  ],
+  "INITIAL_CASH": 1000000,
+  "TEAM_NAMES": ["Team m1", "Team 2", "Team 3", "Team 4" , "teajm5", "Teamj 4" , "teasm5", "Teeam 4" , "teaqm5", "Teamww 4" , "team5w", "Team 4w" , "team5w", "Team w4" , "teamw5"]
+}

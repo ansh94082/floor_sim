@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accountant Terminal | Floor Trading</title>
+    <style>
+        /* === ZERO-DEPENDENCY OFFLINE STYLES === */
+        :root {
+            --bg-grad: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(0, 0, 0, 0.1);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --input-bg: #f8fafc;
+            --input-border: #e2e8f0;
+            --emerald: #10b981;
+            --emerald-hover: #059669;
+            --amber: #f59e0b;
+        }
+
+        body.dark {
+            --bg-grad: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            --card-bg: rgba(15, 23, 42, 0.95);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: #1e293b;
+            --input-border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-grad);
+            color: var(--text-main);
+            transition: background 0.3s, color 0.3s;
+            min-height: 100vh;
+            padding-bottom: 5rem;
+        }
+
+        .container { max-width: 1024px; margin: 0 auto; padding: 2rem 1rem; }
+        
+        /* Layout & Components */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; margin-bottom: 2rem; }
+        .logo-wrap { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon { background: var(--emerald); padding: 0.5rem; border-radius: 0.5rem; color: white; font-size: 1.5rem; }
+        .logo-text { font-size: 1.5rem; font-weight: bold; }
+        .logo-text span { color: var(--emerald); }
+        
+        .theme-btn { 
+            background: var(--card-bg); border: 1px solid var(--card-border); 
+            padding: 0.75rem; border-radius: 0.75rem; cursor: pointer; font-size: 1.2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;
+        }
+        .theme-btn:active { transform: scale(0.95); }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;}
+        .card-title { font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.05em; }
+        .card-subtitle { color: var(--text-muted); font-weight: 500; margin-top: 0.25rem; }
+
+        /* Toggle Switch */
+        .toggle-wrap { display: flex; align-items: center; gap: 1rem; background: var(--input-border); padding: 0.5rem 1rem; border-radius: 1rem; }
+        .toggle-label { font-size: 0.875rem; font-weight: bold; text-transform: uppercase; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--emerald); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .initial-mode-active { border: 3px solid var(--emerald) !important; box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
+
+        /* Forms */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .form-label { font-size: 0.75rem; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+        .form-control {
+            width: 100%; padding: 1rem; border-radius: 0.75rem;
+            background: var(--input-bg); color: var(--text-main);
+            border: 2px solid var(--input-border); font-size: 1rem; font-weight: 600;
+            outline: none; transition: border-color 0.2s;
+        }
+        .form-control:focus { border-color: var(--emerald); }
+        .form-control:read-only { opacity: 0.7; }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%; margin-top: 2.5rem; padding: 1.25rem;
+            background: var(--emerald); color: white;
+            border: none; border-radius: 1rem; font-size: 1.1rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover { background: var(--emerald-hover); transform: translateY(-2px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        /* Bulk Grid */
+        .bulk-banner { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; }
+        .stock-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stock-card { background: var(--input-bg); border: 1px solid var(--input-border); padding: 1rem; border-radius: 0.75rem; }
+        .stock-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-weight: bold; }
+        .price-tag { color: var(--emerald); font-size: 0.875rem; }
+        
+        .bulk-total-wrap { text-align: right; background: var(--input-bg); padding: 1rem; border-radius: 1rem; }
+        .total-amount { font-size: 1.5rem; font-weight: 900; color: var(--emerald); }
+
+        /* Table */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 1rem; }
+        th { padding: 1rem; border-bottom: 2px solid var(--input-border); font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
+        td { padding: 1rem; border-bottom: 1px solid var(--input-border); font-size: 0.875rem; font-weight: 600; }
+        .text-right { text-align: right; }
+        .op-60 { opacity: 0.6; }
+        .text-emerald { color: var(--emerald); }
+        .text-amber { color: var(--amber); }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; gap: 1rem; } }
+    </style>
+</head>
+<body class="">
+
+    <nav class="container header">
+        <div class="logo-wrap">
+            <div class="logo-icon">📈</div>
+            <h1 class="logo-text">Trade<span>Terminal</span></h1>
+        </div>
+        <button onclick="toggleTheme()" class="theme-btn" id="themeBtn">🌙</button>
+    </nav>
+
+    <main class="container">
+        <div id="mainCard" class="card">
+            
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Execute Trade</h2>
+                    <p class="card-subtitle">Station Active • Offline Mode</p>
+                </div>
+                
+                <div class="toggle-wrap">
+                    <span class="toggle-label">Bulk Buy-In Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modeToggle" onchange="handleModeChange()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="standardInputs" class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Buyer Team</label>
+                    <select id="buyer" class="form-control team-select"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Seller Team</label>
+                    <select id="seller" class="form-control team-select"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Asset</label>
+                    <select id="stock" class="form-control stock-select" onchange="autoFillPrice()"></select>
+                </div>
+                <div class="grid-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Qty</label>
+                        <input type="number" id="qty" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price</label>
+                        <input type="number" id="price" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div id="bulkInputs" class="hidden">
+                <div class="bulk-banner form-group">
+                    <label class="form-label" style="color: var(--emerald);">Target Team (Initial Allocation)</label>
+                    <select id="bulkBuyer" class="form-control team-select" style="border-color: var(--emerald);"></select>
+                </div>
+                <div id="stockGrid" class="stock-grid"></div>
+                <div class="bulk-total-wrap">
+                    <span class="form-label">Total Estimated Cost</span>
+                    <div id="bulkTotal" class="total-amount">₹0</div>
+                </div>
+            </div>
+
+            <button onclick="executeTrade()" id="execBtn" class="btn-primary">
+                Confirm & Execute Trade
+            </button>
+        </div>
+
+        <div class="card" style="padding: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                🕒 Station Activity
+            </h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Buyer</th>
+                            <th>Seller</th>
+                            <th>Stock</th>
+                            <th class="text-right">Qty</th>
+                            <th class="text-right">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let serverData = { stocks: [], teams: [] };
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            const btn = document.getElementById('themeBtn');
+            btn.innerText = document.body.classList.contains('dark') ? '☀️' : '🌙';
+        }
+
+        async function refreshData() {
+            try {
+                const currentBuyer = document.getElementById('buyer').value;
+                const currentSeller = document.getElementById('seller').value;
+                const currentStock = document.getElementById('stock').value;
+                const currentBulkBuyer = document.getElementById('bulkBuyer').value;
+
+                const res = await fetch('/api/data');
+                serverData = await res.json();
+                
+                const teamOpts = serverData.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                document.querySelectorAll('.team-select').forEach(el => el.innerHTML = teamOpts);
+                
+                const stockOpts = serverData.stocks.map(s => `<option value="${s.ticker}">${s.ticker}</option>`).join('');
+                document.querySelectorAll('.stock-select').forEach(el => el.innerHTML = stockOpts);
+                
+                if(currentBuyer) document.getElementById('buyer').value = currentBuyer;
+                if(currentSeller) document.getElementById('seller').value = currentSeller;
+                if(currentStock) document.getElementById('stock').value = currentStock;
+                if(currentBulkBuyer) document.getElementById('bulkBuyer').value = currentBulkBuyer;
+
+                renderBulkGrid();
+                updateHistory();
+            } catch (e) { console.error("Sync failed."); }
+        }
+
+        function renderBulkGrid() {
+            const grid = document.getElementById('stockGrid');
+            if (grid.children.length === serverData.stocks.length) return; 
+            
+            grid.innerHTML = serverData.stocks.map(s => `
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span>${s.ticker}</span>
+                        <span class="price-tag">₹${s.price}</span>
+                    </div>
+                    <input type="number" data-ticker="${s.ticker}" data-price="${s.price}" placeholder="Qty" oninput="calcBulkTotal()" class="form-control bulk-qty-input" style="padding: 0.5rem;">
+                </div>
+            `).join('');
+        }
+
+        function calcBulkTotal() {
+            let total = 0;
+            document.querySelectorAll('.bulk-qty-input').forEach(input => {
+                const qty = parseInt(input.value) || 0;
+                total += qty * parseFloat(input.dataset.price);
+            });
+            document.getElementById('bulkTotal').innerText = `₹${total.toLocaleString()}`;
+        }
+
+        function handleModeChange() {
+            const isInitial = document.getElementById('modeToggle').checked;
+            const standard = document.getElementById('standardInputs');
+            const bulk = document.getElementById('bulkInputs');
+            const card = document.getElementById('mainCard');
+            const btnText = document.getElementById('execBtn');
+
+            if (isInitial) {
+                standard.classList.add('hidden');
+                bulk.classList.remove('hidden');
+                card.classList.add('initial-mode-active');
+                btnText.innerText = "Process Bulk Allocation";
+                renderBulkGrid();
+            } else {
+                standard.classList.remove('hidden');
+                bulk.classList.add('hidden');
+                card.classList.remove('initial-mode-active');
+                btnText.innerText = "Confirm & Execute Trade";
+            }
+        }
+
+        function autoFillPrice() {
+            if (document.getElementById('modeToggle').checked) return;
+            const ticker = document.getElementById('stock').value;
+            const stock = serverData.stocks.find(s => s.ticker === ticker);
+            document.getElementById('price').value = stock ? stock.price : 0;
+        }
+
+        async function executeTrade() {
+            const isInitial = document.getElementById('modeToggle').checked;
+            if (isInitial) {
+                const buyerId = document.getElementById('bulkBuyer').value;
+                const trades = [];
+                document.querySelectorAll('.bulk-qty-input').forEach(input => {
+                    const qty = parseInt(input.value);
+                    if (qty > 0) trades.push({ buyerId, sellerId: 'BANK', stock: input.dataset.ticker, qty, price: parseFloat(input.dataset.price) });
+                });
+
+                if (trades.length === 0) return alert("Enter at least one quantity.");
+                
+                for (let t of trades) {
+                    await fetch('/api/trade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(t) });
+                }
+                alert("Bulk Allocation Complete");
+                document.querySelectorAll('.bulk-qty-input').forEach(i => i.value = "");
+                calcBulkTotal();
+            } else {
+                const payload = { 
+                    buyerId: document.getElementById('buyer').value, 
+                    sellerId: document.getElementById('seller').value, 
+                    stock: document.getElementById('stock').value, 
+                    qty: parseInt(document.getElementById('qty').value), 
+                    price: parseFloat(document.getElementById('price').value) 
+                };
+                if (!payload.qty || payload.qty <= 0) return alert("Quantity required.");
+                if (payload.buyerId === payload.sellerId) return alert("Self trading blocked");
+                
+                const res = await fetch('/api/trade', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                alert(await res.text());
+                document.getElementById('qty').value = "";
+            }
+            refreshData();
+        }
+
+        async function updateHistory() {
+            if(serverData.trades) {
+                const rows = serverData.trades.slice(0, 5).map(t => `
+                    <tr>
+                        <td class="op-60">${new Date(t.ts).toLocaleTimeString()}</td>
+                        <td class="text-emerald">${getTeamName(t.buyer_id)}</td>
+                        <td class="${t.seller_id === 'BANK' ? 'text-amber' : ''}">${t.seller_id === 'BANK' ? '🏛️ BANK' : getTeamName(t.seller_id)}</td>
+                        <td>${t.stock}</td>
+                        <td class="text-right">${t.qty}</td>
+                        <td class="text-right">₹${t.price.toLocaleString()}</td>
+                    </tr>
+                `).join('');
+                document.getElementById('historyBody').innerHTML = rows;
+            }
+        }
+
+        function getTeamName(id) {
+            const team = serverData.teams.find(t => t.id == id);
+            return team ? team.name : id;
+        }
+
+        refreshData();
+        setInterval(refreshData, 10000);
+    </script>
+</body>
+</html>

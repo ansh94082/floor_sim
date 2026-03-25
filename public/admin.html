@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin God-Mode | TradeTerminal</title>
+    <style>
+        /* === ZERO-DEPENDENCY OFFLINE STYLES === */
+        :root {
+            --bg-dark: #020617;
+            --bg-panel: rgba(15, 23, 42, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-solid: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --emerald: #10b981;
+            --emerald-light: #34d399;
+            --amber: #f59e0b;
+            --blue: #2563eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(circle at top right, #0f172a, var(--bg-dark));
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .gap-4 { gap: 1rem; }
+        .gap-8 { gap: 2rem; }
+        .flex-col { flex-direction: column; }
+        .hidden { display: none !important; }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Header */
+        header {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-solid);
+            margin-bottom: 2rem;
+            flex-wrap: wrap; /* responsive */
+        }
+
+        .shield-icon {
+            background: var(--amber);
+            color: #0f172a;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+        }
+
+        .title { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.05em; }
+        .title span { color: var(--amber); }
+        
+        .status { color: var(--text-muted); font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; margin-top: 0.25rem;}
+        .status-dot { width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; margin-right: 8px; animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: flex-end;}
+        .btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+        }
+        .btn:hover { filter: brightness(1.1); }
+        .btn:active { transform: scale(0.95); }
+        .btn-amber { background: #d97706; border: 1px solid #b45309; }
+        .btn-blue { background: #2563eb; border: 1px solid #1d4ed8; }
+        .btn-emerald { background: #059669; border: 1px solid #047857; }
+        .btn-slate { background: #1e293b; border: 1px solid #334155; }
+
+        /* Section Titles */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-solid); padding-bottom: 1rem;}
+        .section-title { font-size: 1.125rem; font-weight: bold; display: flex; align-items: center; gap: 0.75rem; }
+        .subtitle { font-size: 0.75rem; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* Table */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 1rem 0.75rem; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border-solid); }
+        td { padding: 0.5rem; border-bottom: 1px solid rgba(30, 41, 59, 0.5); }
+        tr:hover { background: rgba(30, 41, 59, 0.3); }
+
+        /* Editable Inputs */
+        .edit-input {
+            width: 100%; background: transparent; border: none; border-radius: 0.25rem;
+            padding: 0.5rem; font-family: inherit; font-size: 1rem; transition: all 0.2s;
+        }
+        .edit-input.locked { color: var(--text-muted); font-weight: 500; outline: none; }
+        .edit-input.editable { color: var(--emerald-light); font-weight: bold; }
+        .edit-input.editable:focus { background: var(--border-solid); outline: 1px solid var(--amber); }
+
+        /* Audit Log */
+        .audit-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;
+            max-height: 50vh; overflow-y: auto; padding-right: 0.5rem;
+        }
+        .audit-card {
+            background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-solid);
+            padding: 1rem; border-radius: 0.75rem; position: relative; overflow: hidden;
+            font-size: 0.875rem;
+        }
+        .audit-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .bg-amber { background-color: var(--amber); }
+        .bg-emerald { background-color: var(--emerald); }
+        .audit-time { color: var(--text-muted); font-weight: bold; }
+        .audit-val { font-weight: 900; color: var(--emerald); font-size: 1rem;}
+        .audit-text { color: #cbd5e1; margin-top: 0.5rem; line-height: 1.4;}
+        .audit-text strong { color: white; }
+        .audit-text span { color: var(--text-muted); margin: 0 0.25rem; }
+    </style>
+</head>
+<body>
+
+    <header class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="shield-icon">🛡️</div>
+            <div>
+                <h1 class="title">Admin <span>God-Mode</span></h1>
+                <p class="status">
+                    <span class="status-dot"></span> System Live • Offline Mode
+                </p>
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <button onclick="addNewTeam()" class="btn btn-amber">
+                ➕ Add Team
+            </button>
+
+            <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleImport(this)">
+            
+            <button onclick="document.getElementById('csvFileInput').click()" class="btn btn-blue">
+                📤 Import CSV
+            </button>
+
+            <button onclick="exportCSV()" class="btn btn-emerald">
+                📊 Export CSV
+            </button>
+            
+            <button onclick="loadTable()" class="btn btn-slate">
+                🔄 Sync Now
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-col gap-8">
+
+        <section class="glass-panel">
+            <div class="section-header">
+                <h3 class="section-title">🗄️ Team Ledger Override</h3>
+                <span class="subtitle">Manual Edits Sync Instantly</span>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr id="thead"></tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="glass-panel" style="border-top: 4px solid var(--emerald);">
+            <div class="section-header">
+                <h3 class="section-title">🧾 Audit Log</h3>
+            </div>
+            
+            <div id="auditLog" class="audit-grid"></div>
+        </section>
+
+    </div>
+
+    <script>
+        let lastData = null;
+
+        async function loadTable() {
+            try {
+                const res = await fetch('/api/data');
+                const data = await res.json();
+                if (!data.teams.length) return;
+
+                lastData = data;
+                renderTable(data);
+                renderAudit(data.trades);
+            } catch (e) {
+                console.error("Failed to fetch admin data");
+            }
+        }
+
+        function renderTable(data) {
+            const headers = Object.keys(data.teams[0]);
+
+            // Header
+            document.getElementById('thead').innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+
+            // Rows
+            document.getElementById('tbody').innerHTML = data.teams.map(team => `
+                <tr>
+                    ${headers.map(h => {
+                        const isLocked = (h === 'id' || h === 'name');
+                        const inputClass = isLocked ? 'locked' : 'editable';
+                        return `
+                            <td>
+                                <input class="edit-input ${inputClass}"
+                                       value="${team[h]}" 
+                                       ${isLocked ? 'readonly' : ''}
+                                       onchange="updateValue(${team.id}, '${h}', this.value)">
+                            </td>
+                        `;
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
+
+        function renderAudit(trades) {
+            if (!trades) return;
+            const log = document.getElementById('auditLog');
+            
+            // Reverse trades to show newest first
+            const recentTrades = [...trades].reverse();
+
+            log.innerHTML = recentTrades.map(t => `
+                <div class="audit-card">
+                    <div class="audit-bar ${t.seller_id === 'BANK' ? 'bg-amber' : 'bg-emerald'}"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="audit-time">${new Date(t.ts).toLocaleTimeString()}</span>
+                        <span class="audit-val">₹${(t.qty * t.price).toLocaleString()}</span>
+                    </div>
+                    <div class="audit-text">
+                        <strong>${getTeamName(t.buyer_id)}</strong> 
+                        <span>bought</span> 
+                        <strong>${t.qty} ${t.stock}</strong> 
+                        <span>from</span> 
+                        <strong>${t.seller_id === 'BANK' ? '🏛️ BANK' : getTeamName(t.seller_id)}</strong>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                try {
+                    const response = await fetch('/api/admin/import-csv', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: text
+                    });
+
+                    if (response.ok) {
+                        alert("Database successfully updated from CSV");
+                        loadTable();
+                    } else {
+                        const err = await response.text();
+                        alert("Error: " + err);
+                    }
+                } catch (error) {
+                    alert("Connection error during import");
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        async function addNewTeam() {
+            const name = prompt("Enter New Team Name:");
+            if (!name) return;
+
+            const res = await fetch('/api/admin/add-team', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            alert(await res.text());
+            loadTable(); 
+        }
+
+        async function exportCSV() {
+            try {
+                const response = await fetch('/api/admin/export-csv');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `trading_data_${new Date().getTime()}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (e) {
+                alert("Failed to export CSV");
+            }
+        }
+
+        function getTeamName(id) {
+            const team = lastData.teams.find(t => t.id == id);
+            return team ? team.name : id;
+        }
+
+        async function updateValue(teamId, column, value) {
+            const res = await fetch('/api/admin/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teamId, column, value })
+            });
+            if (res.ok) {
+                console.log(`Success: ${column} -> ${value}`);
+            }
+        }
+
+        // Initial load and 5s refresh
+        loadTable();
+        setInterval(loadTable, 5000);
+    </script>
+</body>
+</html>
