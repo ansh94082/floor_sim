@@ -28,7 +28,7 @@ You must have [Node.js](https://nodejs.org/) installed on your "Master" laptop.
 
 ```bash
 git clone https://github.com/ansh94082/floor_sim
-cd floorsim
+cd floor_sim
 npm install
 ```
 
