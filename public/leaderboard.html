@@ -172,57 +172,63 @@
     <div id="leaderboardGrid" class="leaderboard-grid">
         </div>
 
-    <script>
-        async function updateLeaderboard() {
-            try {
-                const res = await fetch('/api/leaderboard');
-                const data = await res.json();
+   <script>
+    async function updateLeaderboard() {
+        try {
+            // Fetching from the API we modified above
+            const res = await fetch('/api/leaderboard');
+            if (!res.ok) throw new Error("Network response was not ok");
+            const data = await res.json();
+            
+            const container = document.getElementById('leaderboardGrid');
+            container.innerHTML = data.map((team, index) => {
+                let glowClass = "normal-rank";
+                let medal = `<span class="rank-number">#${index + 1}</span>`;
                 
-                const container = document.getElementById('leaderboardGrid');
-                container.innerHTML = data.map((team, index) => {
-                    let glowClass = "normal-rank";
-                    let medal = `<span class="rank-number">#${index + 1}</span>`;
-                    
-                    if (index === 0) {
-                        glowClass = "gold-glow";
-                        medal = `👑`; // Native crown emoji
-                    } else if (index === 1) {
-                        glowClass = "silver-glow";
-                        medal = `🥈`; // Native silver medal emoji
-                    } else if (index === 2) {
-                        glowClass = "bronze-glow";
-                        medal = `🥉`; // Native bronze medal emoji
-                    }
+                if (index === 0) {
+                    glowClass = "gold-glow";
+                    medal = `👑`;
+                } else if (index === 1) {
+                    glowClass = "silver-glow";
+                    medal = `🥈`;
+                } else if (index === 2) {
+                    glowClass = "bronze-glow";
+                    medal = `🥉`;
+                }
 
-                    return `
-                        <div class="rank-card ${glowClass}">
-                            <div class="card-left">
-                                <div class="medal-col">${medal}</div>
-                                <div class="team-info">
-                                    <h3>${team.name}</h3>
-                                    <p>Cash: ₹${team.cash.toLocaleString()}</p>
+                // Format numbers to Indian Numbering System
+                const formatter = new Intl.NumberFormat('en-IN');
+
+                return `
+                    <div class="rank-card ${glowClass}">
+                        <div class="card-left">
+                            <div class="medal-col">${medal}</div>
+                            <div class="team-info">
+                                <h3>${team.name}</h3>
+                                <div style="display: flex; gap: 15px;">
+                                    <p>Cash: ₹${formatter.format(Math.round(team.cash))}</p>
+                                    <p style="color: var(--text-slate-500)">Portfolio: ₹${formatter.format(Math.round(team.stockValue))}</p>
                                 </div>
                             </div>
-                            <div class="card-right">
-                                <div class="nw-label">Total Net Worth</div>
-                                <div class="nw-value">₹${team.netWorth.toLocaleString()}</div>
-                            </div>
                         </div>
-                    `;
-                }).join('');
-            } catch (e) { 
-                console.error("Update failed. Make sure the server is running."); 
-            }
+                        <div class="card-right">
+                            <div class="nw-label">Settlement Net Worth</div>
+                            <div class="nw-value">₹${formatter.format(Math.round(team.netWorth))}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) { 
+            console.error("Update failed. Make sure the server is running."); 
         }
+    }
 
-        // Clock Update
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-US', { hour12: false });
-        }, 1000);
+    // Clock Update
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-US', { hour12: false });
+    }, 1000);
 
-        // Leaderboard Update
-        updateLeaderboard();
-        setInterval(updateLeaderboard, 10000); // Refreshes every 10 seconds
-    </script>
-</body>
-</html>
+    // Initial load and 10s refresh
+    updateLeaderboard();
+    setInterval(updateLeaderboard, 10000);
+</script>
