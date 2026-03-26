@@ -30,8 +30,8 @@ function logTransaction(type, details) {
 }
 
 db.serialize(() => {
-    // Create columns based on Tickers
-    const stockColumns = TICKERS.map(t => `${t} INTEGER DEFAULT 0`).join(', ');
+    // FIXED: Added double quotes around ticker names to handle special characters like '&'
+    const stockColumns = TICKERS.map(t => `"${t}" INTEGER DEFAULT 0`).join(', ');
     
     db.run(`CREATE TABLE IF NOT EXISTS teams (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -98,7 +98,8 @@ app.post('/api/admin/import-csv', express.text({ limit: '10mb' }), (req, res) =>
                 const teamId = values[headers.indexOf('id')];
                 headers.forEach((header, index) => {
                     if (header !== 'id' && header !== 'name') {
-                        db.run(`UPDATE teams SET ${header} = ? WHERE id = ?`, [values[index], teamId]);
+                        // FIXED: Added double quotes around header
+                        db.run(`UPDATE teams SET "${header}" = ? WHERE id = ?`, [values[index], teamId]);
                     }
                 });
             });
@@ -152,7 +153,6 @@ app.post('/api/admin/add-team', (req, res) => {
 });
 
 
-
 app.post('/api/trade', (req, res) => {
     const { buyerId, sellerId, stock, qty, price } = req.body;
     const totalCost = qty * price;
@@ -174,9 +174,11 @@ app.post('/api/trade', (req, res) => {
 
 function processTrade(buyerId, sellerId, stock, qty, totalCost, res) {
     db.serialize(() => {
-        db.run(`UPDATE teams SET cash = cash - ?, ${stock} = ${stock} + ? WHERE id = ?`, [totalCost, qty, buyerId]);
+        // FIXED: Added double quotes around stock
+        db.run(`UPDATE teams SET cash = cash - ?, "${stock}" = "${stock}" + ? WHERE id = ?`, [totalCost, qty, buyerId]);
         if (sellerId !== 'BANK') {
-            db.run(`UPDATE teams SET cash = cash + ?, ${stock} = ${stock} - ? WHERE id = ?`, [totalCost, qty, sellerId]);
+            // FIXED: Added double quotes around stock
+            db.run(`UPDATE teams SET cash = cash + ?, "${stock}" = "${stock}" - ? WHERE id = ?`, [totalCost, qty, sellerId]);
         }
         db.run(`INSERT INTO trades (buyer_id, seller_id, stock, qty, price) VALUES (?, ?, ?, ?, ?)`,
             [buyerId, sellerId, stock, qty, totalCost / qty]);
@@ -188,7 +190,8 @@ function processTrade(buyerId, sellerId, stock, qty, totalCost, res) {
 
 app.post('/api/admin/update', (req, res) => {
     const { teamId, column, value } = req.body;
-    db.run(`UPDATE teams SET ${column} = ? WHERE id = ?`, [value, teamId], (err) => {
+    // FIXED: Added double quotes around column
+    db.run(`UPDATE teams SET "${column}" = ? WHERE id = ?`, [value, teamId], (err) => {
         if (!err) logTransaction('ADMIN_UPDATE', `Team=${teamId} | ${column} set to ${value}`);
         res.send(err ? "Update Failed" : "Update Successful");
     });
